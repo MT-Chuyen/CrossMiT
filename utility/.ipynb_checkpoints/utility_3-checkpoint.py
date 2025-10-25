@@ -1,21 +1,22 @@
- 
 import math
-import heapq  # for retrieval topK
+import heapq
 import numpy as np
 from time import time
 from tqdm import tqdm
 from collections import defaultdict
-def test(model, data_generator, test_user_list, data_type, batch_size, Ks, layer_size):
-    # Lấy các tham số K
-    Ks_list = eval(Ks) 
+import os
+import re
+import tensorflow as tf
+import random as rd
+import scipy.sparse as sp
 
-    # 1. Lấy dữ liệu test (users, items, user_gt_item)
+def test(model, data_generator, test_user_list, data_type, batch_size, Ks, layer_size):
+    Ks_list = eval(Ks)
+
     users, items, user_gt_item = get_test_instance(data_generator, test_user_list)
     num_test_batches = len(users) // batch_size + 1
     test_preds = []
 
-    # 2. Vòng lặp dự đoán (Prediction loop - Giống code cũ)
-    # ... (Code prediction loop cho domain source/target) ...
     if data_type == 'source':
         desc = 'test_source'
     else:
@@ -31,65 +32,57 @@ def test(model, data_generator, test_user_list, data_type, batch_size, Ks, layer
             inputs = {'users_s': batch_input_users, 'items_s': batch_input_items, 'label_s': np.zeros(len(batch_input_users), dtype=np.float32),
                       'users_t': np.zeros_like(batch_input_users, dtype=np.int32), 'items_t': np.zeros_like(batch_input_items, dtype=np.int32), 'label_t': np.zeros_like(batch_input_users, dtype=np.float32)}
             scores, _, _, _ = model(inputs, training=False, node_dropout=0.0, mess_dropout=[0.0] * len(eval(layer_size)))
-        else: # target
+        else:
             inputs = {'users_s': np.zeros_like(batch_input_users, dtype=np.int32), 'items_s': np.zeros_like(batch_input_items, dtype=np.int32), 'label_s': np.zeros_like(batch_input_users, dtype=np.float32),
                       'users_t': batch_input_users, 'items_t': batch_input_items, 'label_t': np.zeros(len(batch_input_users), dtype=np.float32)}
             _, scores, _, _ = model(inputs, training=False, node_dropout=0.0, mess_dropout=[0.0] * len(eval(layer_size)))
-        
+
         test_preds.extend(scores.numpy())
     assert len(test_preds) == len(users), 'Prediction count does not match user count'
 
 
-    # 3. Tổng hợp và Tính toán Metrics
     user_item_preds = defaultdict(lambda: defaultdict(float))
     for sample_id in range(len(users)):
         user = users[sample_id]
         item = items[sample_id]
         pred = test_preds[sample_id]
         user_item_preds[user][item] = pred
-    
+
     all_hits, all_ndcgs, all_precisions, all_recalls, all_f1s, all_aps = [], [], [], [], [], []
     all_labels_flat, all_preds_flat = [], []
 
     for user in user_item_preds.keys():
         item_pred = user_item_preds[user]
         gtItem = user_gt_item[user]
-        
-        # Sắp xếp các mục theo điểm dự đoán giảm dần
-        item_scores = sorted(item_pred.items(), key=lambda x: x[1], reverse=True)
-        
-        # Vector Relevance (r) cho tất cả các mục đã test (Pos + Negs)
-        r = [1 if item == gtItem else 0 for item, score in item_scores]
-        all_pos_num = 1 # Trong setup 1-ground-truth-item
 
-        # Chuẩn bị dữ liệu phẳng cho AUC/MAP
+        item_scores = sorted(item_pred.items(), key=lambda x: x[1], reverse=True)
+
+        r = [1 if item == gtItem else 0 for item, score in item_scores]
+        all_pos_num = 1
+
         for item, pred in item_scores:
             all_preds_flat.append(pred)
             all_labels_flat.append(1 if item == gtItem else 0)
 
-        # Tính toán Average Precision (AP)
         user_ap = average_precision(r, cut=len(r))
         all_aps.append(user_ap)
 
-        # Tính toán Ranking Metrics cho tất cả K
         user_metrics_k = defaultdict(list)
         for k in Ks_list:
-            ranklist = [item for item, score in item_scores[:k]] 
+            ranklist = [item for item, score in item_scores[:k]]
             r_k = r[:k]
-            
-            # HR (Hit Ratio) và NDCG
+
             user_metrics_k['HR'].append(getHitRatio(ranklist, gtItem))
             user_metrics_k['NDCG'].append(getNDCG(ranklist, gtItem))
-            
-            # Precision, Recall, F1
+
             prec = precision_at_k(r_k, k)
             rec = recall_at_k(r_k, k, all_pos_num)
             f1 = F1(prec, rec)
-            
+
             user_metrics_k['Precision'].append(prec)
             user_metrics_k['Recall'].append(rec)
             user_metrics_k['F1'].append(f1)
-        
+
         all_hits.append(user_metrics_k['HR'])
         all_ndcgs.append(user_metrics_k['NDCG'])
         all_precisions.append(user_metrics_k['Precision'])
@@ -97,7 +90,6 @@ def test(model, data_generator, test_user_list, data_type, batch_size, Ks, layer
         all_f1s.append(user_metrics_k['F1'])
 
 
-    # 4. Lấy giá trị trung bình (Average across users) và Global Metrics
     results = {
         'Ks': Ks_list,
         'HR': np.array(all_hits).mean(axis=0).tolist(),
@@ -106,12 +98,12 @@ def test(model, data_generator, test_user_list, data_type, batch_size, Ks, layer
         'Recall': np.array(all_recalls).mean(axis=0).tolist(),
         'F1': np.array(all_f1s).mean(axis=0).tolist(),
         'AUC': auc(np.array(all_labels_flat), np.array(all_preds_flat)),
-        'MAP': np.mean(all_aps) # Mean Average Precision (proxy cho AUPR)
+        'MAP': np.mean(all_aps)
     }
     return results
 
 def get_test_instance(data_generator, test_user_list):
- 
+
     users, items = [], []
     user_gt_item = {}
     rating_list = np.array(data_generator.ratingList)
@@ -131,67 +123,24 @@ def get_test_instance(data_generator, test_user_list):
 
     return np.array(users), np.array(items), user_gt_item
 
-# #không giới hạn neg sample, lấy tất cả các neg test sample còn lại
-# def get_test_instance(data_generator, test_user_list):
-#     users, items = [], []
-#     user_gt_item = {}
-#     rating_list = np.array(data_generator.ratingList)
-
-#     # Lấy tất cả item trong hệ thống
-#     all_items = set(range(data_generator.n_items))
-
-#     # Lấy danh sách các item đã tương tác của mỗi user (từ tập train)
-#     train_items = data_generator.train_items  # {user: [item1, item2, ...]}
-
-#     for idx in test_user_list:
-#         rating = rating_list[idx]
-#         u = rating[0]
-#         gtItem = rating[1]
-#         user_gt_item[u] = gtItem
-
-#         # Lấy danh sách item chưa tương tác (negative samples)
-#         interacted_items = set(train_items.get(u, []))  # Các item user đã tương tác trong tập train
-#         negative_items = list(all_items - interacted_items)  # Tất cả item chưa tương tác
-
-#         # Thêm các cặp (user, negative_item)
-#         for item in negative_items:
-#             users.append(u)
-#             items.append(item)
-
-#         # Thêm cặp (user, positive_item)
-#         users.append(u)
-#         items.append(gtItem)
-
-#     return np.array(users), np.array(items), user_gt_item
-
-
-
 def getHitRatio(ranklist, gtItem):
- 
+
     for item in ranklist:
         if item == gtItem:
             return 1
     return 0
 
 def getNDCG(ranklist, gtItem):
- 
+
     for i in range(len(ranklist)):
         item = ranklist[i]
         if item == gtItem:
             return math.log(2) / math.log(i + 2)
     return 0
 
-# learner.pypy
 __author__ = "xiangwang"
 import os
 import re
-# from progress.bar import Bar
-
-
-# class ProgressBar(Bar):
-#     message = 'Loading'
-#     fill = '#'
-#     suffix = '%(percent).1f%% | ETA: %(eta)ds'
 
 def txt2list(file_src):
     orig_file = open(file_src, "r")
@@ -220,13 +169,11 @@ def delMultiChar(inputString, chars):
     return inputString
 
 def merge_two_dicts(x, y):
-    z = x.copy()   # start with x's keys and values
-    z.update(y)    # modifies z with y's keys and values & returns None
+    z = x.copy()
+    z.update(y)
     return z
 
 def early_stopping(log_hr, best_hr,stopping_step , flag_step=100):
-    # early stopping strategy:
-    # assert expected_order in ['acc', 'dec']
 
     if log_hr >= best_hr :
         stopping_step = 0
@@ -248,23 +195,22 @@ def search_index_from_file(string):
     p4 = re.compile(r'\+ (\d*\.\d*?)[],]',re.S)
     return re.findall(p1, string), re.findall(p2, string),re.findall(p3, string),re.findall(p4, string)
 
-# learner.py
 import tensorflow as tf
 def optimizer(learner,loss,learning_rate,momentum=0.9):
     optimizer=None
-    if learner.lower() == "adagrad": 
-        optimizer = tf.train.AdagradOptimizer(learning_rate=learning_rate,\
-                     initial_accumulator_value=1e-8).minimize(loss)
+    if learner.lower() == "adagrad":
+        optimizer = tf.train.AdagradOptimizer(learning_rate=learning_rate,
+                             initial_accumulator_value=1e-8).minimize(loss)
     elif learner.lower() == "rmsprop":
         optimizer = tf.train.RMSPropOptimizer(learning_rate).minimize(loss)
     elif learner.lower() == "adam":
         optimizer = tf.train.AdamOptimizer(learning_rate).minimize(loss)
     elif learner.lower() == "gd" :
-        optimizer = tf.train.GradientDescentOptimizer(learning_rate).minimize(loss)  
+        optimizer = tf.train.GradientDescentOptimizer(learning_rate).minimize(loss)
     elif learner.lower() == "momentum" :
-        optimizer = tf.train.MomentumOptimizer(learning_rate,momentum).minimize(loss)  
+        optimizer = tf.train.MomentumOptimizer(learning_rate,momentum).minimize(loss)
     else :
-        raise ValueError("please select a suitable optimizer")  
+        raise ValueError("please select a suitable optimizer")
     return optimizer
 
 def pairwise_loss(loss_function,y,margin=1):
@@ -273,8 +219,8 @@ def pairwise_loss(loss_function,y,margin=1):
         loss = -tf.reduce_sum(tf.log_sigmoid(y))
     elif loss_function.lower() == "hinge":
         loss = tf.reduce_sum(tf.maximum(y+margin, 0))
-    elif loss_function.lower() == "square":  
-        loss = tf.reduce_sum(tf.square(1-y))   
+    elif loss_function.lower() == "square":
+        loss = tf.reduce_sum(tf.square(1-y))
     else:
         raise Exception("please choose a suitable loss function")
     return loss
@@ -283,16 +229,13 @@ def pointwise_loss(loss_function,y_rea,y_pre):
     loss=None
     if loss_function.lower() == "cross_entropy":
         loss = tf.losses.sigmoid_cross_entropy(y_rea,y_pre)
-#         loss = - tf.reduce_sum(
-#             y_rea * tf.log(y_pre) + (1 - y_rea) * tf.log(1 - y_pre)) 
-    elif loss_function.lower() == "square":  
-        loss = tf.reduce_sum(tf.square(y_rea-y_pre))  
+
+    elif loss_function.lower() == "square":
+        loss = tf.reduce_sum(tf.square(y_rea-y_pre))
     else:
-        raise Exception("please choose a suitable loss function") 
+        raise Exception("please choose a suitable loss function")
     return loss
 
-#load_data.py
- 
 import numpy as np
 import random as rd
 import scipy.sparse as sp
@@ -307,7 +250,6 @@ class Data(object):
         train_file = path +'/train.txt'
         test_file = path + '/test.txt'
 
-        #get number of users and items
         self.n_users, self.n_items = 0, 0
         self.n_train, self.n_test = 0, 0
         self.neg_pools = {}
@@ -327,12 +269,11 @@ class Data(object):
         self.n_items += 1
         self.n_users += 1
 
-        # self.print_statistics()
         self.negativeList = self.read_neg_file(path)
         self.R = sp.dok_matrix((self.n_users, self.n_items), dtype=np.float32)
         self.ratingList = []
         self.train_items, self.test_set = {}, {}
-        
+
         with open(train_file) as f_train:
             with open(test_file) as f_test:
                 for l in f_train.readlines():
@@ -345,7 +286,6 @@ class Data(object):
                         self.train_items[user] = [item]
                     if (rating > 0):
                         self.R[user, item] = 1.0
-                        # self.R[uid][i] = 1
 
                 line = f_test.readline().strip('\n')
                 while line != None and line != "":
@@ -398,7 +338,6 @@ class Data(object):
             d_mat_inv = sp.diags(d_inv)
 
             norm_adj = d_mat_inv.dot(adj)
-            # norm_adj = adj.dot(d_mat_inv)
             print('generate single-normalized adjacency matrix.')
             return norm_adj.tocoo()
 
@@ -428,7 +367,7 @@ class Data(object):
         while line != None and line != "":
             arr = line.split("\t")
             negatives = []
-            for x in arr[1:]:  # arr[0] = (user, pos_item)
+            for x in arr[1:]:
                 item = int(x)
                 negatives.append(item)
             negativeList.append(negatives)
@@ -440,11 +379,9 @@ class Data(object):
     def get_train_instance(self):
         user_input, item_input, labels = [],[],[]
         for (u, i) in self.R.keys():
-            # positive instance
             user_input.append(u)
             item_input.append(i)
             labels.append(1)
-            # negative negRatio instances
             for _ in range(self.neg_num):
                 j = np.random.randint(self.n_items)
                 while (u, j) in self.R.keys():
@@ -486,7 +423,6 @@ class Data(object):
         all_users_to_test = list(self.test_set.keys())
         user_n_iid = dict()
 
-        # generate a dictionary to store (key=n_iids, value=a list of uid).
         for uid in all_users_to_test:
             train_iids = self.train_items[uid]
             test_iids = self.test_set[uid]
@@ -499,7 +435,6 @@ class Data(object):
                 user_n_iid[n_iids].append(uid)
         split_uids = list()
 
-        # split the whole user set into four subset.
         temp = []
         count = 1
         fold = 4
@@ -534,9 +469,6 @@ class Data(object):
 
         return split_uids, split_state
 
-
-# metrics.py
-
 import numpy as np
 from sklearn.metrics import roc_auc_score
 
@@ -545,7 +477,7 @@ def recall(rank, ground_truth, N):
 
 
 def precision_at_k(r, k):
- 
+
     assert k >= 1
     r = np.asarray(r)[:k]
     return np.mean(r)
@@ -596,7 +528,6 @@ def auc(ground_truth, prediction):
         res = 0.
     return res
 
-# parser.py
 import argparse
 def parse_args():
     parser = argparse.ArgumentParser(description="Run BiTGCF.")
@@ -607,9 +538,7 @@ def parse_args():
     parser.add_argument('--proj_path', nargs='?', default='./',
                         help='Project path.')
 
-    # parser.add_argument('--dataset', nargs='?', default='miRNA-target_miRNA-disease',
-    #                     help='Choose a dataset')
-    parser.add_argument('--dataset', nargs='?', default='miRNA-disease_miRNA-target', #mirna-target là target dataset
+    parser.add_argument('--dataset', nargs='?', default='miRNA-disease_miRNA-target',
                         help='Choose a dataset')
     parser.add_argument('--pretrain', type=int, default=-1,
                         help='0: No pretrain, -1: Pretrain with the learned embeddings, 1:Pretrain with stored models.')
@@ -633,7 +562,7 @@ def parse_args():
                         help='Regularizations.')
     parser.add_argument('--lr', type=float, default=0.001*2,
                         help='Learning rate.')
-    parser.add_argument('--initial_type',  default='x')
+    parser.add_argument('--initial_type', default='x')
     parser.add_argument('--adj_type', nargs='?', default='norm',
                         help='Specify the type of the adjacency (laplacian) matrix from {plain, norm, mean}.')
     parser.add_argument('--alg_type', nargs='?', default='ngcf',
@@ -673,5 +602,5 @@ def parse_args():
                         help='inter-domain feature fuse type')
     parser.add_argument('--sparcy_flag',type=int, default=0)
     parser.add_argument('--resume_epoch', type=int, default=0, help='Epoch to resume training from')
-    parser.add_argument('--keep_ratio', type=float, default=1.0, help='Ratio of data to keep (default: 1.0)')   
+    parser.add_argument('--keep_ratio', type=float, default=1.0, help='Ratio of data to keep (default: 1.0)')
     return parser.parse_args()

@@ -65,7 +65,7 @@ def get_common_user(data1,data2):
     common_user = list(set(data1).intersection(set(data2)))
     return len(common_user),common_user
 
-datapath = '/media/mountHDD2/chuyenmt/Re/Bi-TGCF-miRNA/'
+datapath = '/media/mountHDD2/chuyenmt/ReSys/BiTGCF-MTI-2/'
 data_name_s = 'miRNA-target'
 data_name_t = 'miRNA-disease' 
 save_path = './Data-unlimited-user-iem/'

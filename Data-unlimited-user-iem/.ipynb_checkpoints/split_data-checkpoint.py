@@ -99,10 +99,9 @@ def get_test_neg(train_dic,test_dic,neg_num,filepath):
         test_neg_f.write(line+'\n')
     test_neg_f.close()
 
-filepath = '/media/mountHDD2/chuyenmt/Re/Bi-TGCF-miRNA/Data-unlimited-user-iem/miRNA-target_miRNA-disease/'
-# filepath = '/media/mountHDD2/chuyenmt/Re/Bi-TGCF-miRNA/Data-unlimited-user-iem/miRNA-disease_miRNA-target/'
-# dataset = 'cloth'
-# save_folder = filepath+ 'beauty_cloth/'
+# filepath = '/media/mountHDD2/chuyenmt/ReSys/BiTGCF-MTI-2/Data-unlimited-user-iem/miRNA-target_miRNA-disease/'
+filepath = '/media/mountHDD2/chuyenmt/ReSys/BiTGCF-MTI-2/Data-unlimited-user-iem/miRNA-disease_miRNA-target/'
+ 
 split_init = 0
 
 data,n_items = read_from_file(filepath+'new_reindex.txt')
