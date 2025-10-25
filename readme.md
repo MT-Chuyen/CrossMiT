@@ -1,1 +1,1 @@
-  mirtmc_final_weights.pt: https://drive.google.com/file/d/1ovKlgJ_g2gD50DCaOxn3vdPmNrTpAsR-/view?usp=sharing
+Process data and trained weight: https://drive.google.com/drive/folders/1Ok9vgUcUvEAzMjjuR8s-PpIZCNjdftda?usp=sharing
