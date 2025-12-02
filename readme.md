@@ -13,7 +13,7 @@ CrossMiT predicts miRNA-Target Interactions by leveraging miRNA-Disease Associat
 Flow: Main.py runs training → uses Model.py to build the model → uses Utility.py to calculate metrics and manage files.
 
 * **`Data/`**: Contains the data used and the data processing files.
- - split_data.py: Split train/test data (split_data, split_loo for leave-one-out).
+ * split_data.py: Split train/test data (split_data, split_loo for leave-one-out).
 
  - CSV files: Rating data (miRNA-disease, miRNA-gene).
 
