@@ -3,7 +3,7 @@ Joint Learning
 
 CrossMiT predicts miRNA-Target Interactions by leveraging miRNA-Disease Associations to overcome data sparsity. It employs a bi-directional graph transfer network to align genotypic and phenotypic features through shared miRNA anchors.
 
----
+![]([đường_dẫn_đến_file_ảnh.png](https://github.com/MT-Chuyen/CrossMiT/blob/main/workflowx.png))
 
 ## 📂 Repo Structure  
 
