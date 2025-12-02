@@ -26,14 +26,11 @@ Flow: Main.py runs training → uses Model.py to build the model → uses Utilit
 - miRNA-disease_miRNA-target/, miRNA-target_miRNA-disease/ directories: Contains adjacency matrix (.npz) and processed data for the model.
 Flow: Main.py runs training → uses Model.py to build the model → uses Utility.py to calculate metrics and manage files.
 
-Comman to run code: python Main.py
-
+ 
 ---
 
 ## 🚀 How to Run  
+
+python Main.py
  
-
-* Download the repo
-
-* Follow instructions in the folder Code to run
  
