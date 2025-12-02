@@ -25,6 +25,6 @@ Flow: Main.py runs training → uses Model.py to build the model → uses Utilit
 
 ## 🚀 How to Run  
 
-run comman: python Main.py
+command line: python Main.py
  
  
