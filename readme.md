@@ -15,7 +15,7 @@ CrossMiT predicts miRNA-Target Interactions by leveraging miRNA-Disease Associat
 ## 🚀 How to Run  
  
 
-### Download the repo
+* Download the repo
 
-### Follow instructions in the folder Code to run
+* Follow instructions in the folder Code to run
  
