@@ -5,9 +5,9 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
 from Utility import *
 
-class BiTGCF(tf.keras.Model):
+class CrossMiT(tf.keras.Model):
     def __init__(self, data_config, args, pretrain_data):
-        super(BiTGCF, self).__init__()
+        super(CrossMiT, self).__init__()
 
         # Argument settings
         self.adj_type = args.adj_type

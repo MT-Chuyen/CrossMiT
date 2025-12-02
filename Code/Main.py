@@ -1,5 +1,5 @@
-from utility.utility_3 import *
-from BiTGCF_2 import BiTGCF
+from Utility import *
+from CrossMiT import CrossMiT
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 import tensorflow as tf
@@ -99,7 +99,7 @@ if __name__ == '__main__':
         print("No GPU found. Using CPU.")
 
     wandb.init(
-        project="BiTGCF-miRNA",
+        project="CrossMiT-miRNA",
         name=f"run_lr_{args.lr}_b_{args.batch_size}_layers_{args.layer_size}",
         config={
             "learning_rate": args.lr,
@@ -174,7 +174,7 @@ if __name__ == '__main__':
         split_status_s.append('full rating, #user=%d' % data_generator_s.n_users)
         split_status_t.append('full rating, #user=%d' % data_generator_t.n_users)
 
-    model = BiTGCF(data_config=config, args=args, pretrain_data=pretrain_data)
+    model = CrossMiT(data_config=config, args=args, pretrain_data=pretrain_data)
 
     optimizer = tf.keras.optimizers.Adam(learning_rate=args.lr)
 
