@@ -1,6 +1,6 @@
-* Main.py: Main training loop. Load data, initialize CrossMiT model, save checkpoint, handle resume/pretrain.
-* Model.py: Defines the CrossMiT model architecture.
-* Utility.py: Utility functions:
+- Main.py: Main training loop. Load data, initialize CrossMiT model, save checkpoint, handle resume/pretrain.
+- Model.py: Defines the CrossMiT model architecture.
+- Utility.py: Utility functions:
  - Calculating metrics: getHitRatio, getNDCG
  - Test support: get_test_instance
  - Directory management: ensureDir
