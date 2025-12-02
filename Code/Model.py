@@ -3,7 +3,7 @@ import numpy as np
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
-from Utility import *
+from utility.utility import *
 
 class CrossMiT(tf.keras.Model):
     def __init__(self, data_config, args, pretrain_data):
@@ -16,8 +16,8 @@ class CrossMiT(tf.keras.Model):
         self.pretrain_data = pretrain_data
         self.fuse_type_in = args.fuse_type_in
 
-        self.n_mirnas = data_config['n_mirnas']
-        self.n_disease = data_config['n_disease']
+        self.n_users = data_config['n_users']
+        self.n_items_s = data_config['n_items_s']
         self.n_items_t = data_config['n_items_t']
 
         self.n_fold = 100
@@ -55,33 +55,33 @@ class CrossMiT(tf.keras.Model):
         self.node_dropout_flag = args.node_dropout_flag
 
         # Initialize weights
-        self.weights_source = self._init_weights('source', self.n_disease, None)
+        self.weights_source = self._init_weights('source', self.n_items_s, None)
         self.weights_target = self._init_weights('target', self.n_items_t, None)
 
-    def _init_weights(self, name_scope, n_items, mirna_embedding):
+    def _init_weights(self, name_scope, n_items, user_embedding):
         all_weights = dict()
 
         if self.pretrain_data is None:
-            if mirna_embedding is None:
-                all_weights['mirna_embedding'] = tf.keras.layers.Embedding(
-                    self.n_mirnas, self.emb_dim, embeddings_initializer=self.initializer, name=f'mirna_embedding{name_scope}'
+            if user_embedding is None:
+                all_weights['user_embedding'] = tf.keras.layers.Embedding(
+                    self.n_users, self.emb_dim, embeddings_initializer=self.initializer, name=f'user_embedding_{name_scope}'
                 )
                 all_weights['item_embedding'] = tf.keras.layers.Embedding(
                     n_items, self.emb_dim, embeddings_initializer=self.initializer, name=f'item_embedding_{name_scope}'
                 )
                 print('using xavier initialization')
             else:
-                all_weights['mirna_embedding'] = tf.keras.layers.Embedding(
-                    self.n_mirnas, self.emb_dim, embeddings_initializer=tf.constant_initializer(mirna_embedding), 
-                    trainable=True, name=f'mirna_embedding{name_scope}'
+                all_weights['user_embedding'] = tf.keras.layers.Embedding(
+                    self.n_users, self.emb_dim, embeddings_initializer=tf.constant_initializer(user_embedding), 
+                    trainable=True, name=f'user_embedding_{name_scope}'
                 )
                 all_weights['item_embedding'] = tf.keras.layers.Embedding(
                     n_items, self.emb_dim, embeddings_initializer=self.initializer, name=f'item_embedding_{name_scope}'
                 )
         else:
-            all_weights['mirna_embedding'] = tf.keras.layers.Embedding(
-                self.n_mirnas, self.emb_dim, embeddings_initializer=tf.constant_initializer(self.pretrain_data['mirna_embed']),
-                trainable=True, name=f'mirna_embedding{name_scope}'
+            all_weights['user_embedding'] = tf.keras.layers.Embedding(
+                self.n_users, self.emb_dim, embeddings_initializer=tf.constant_initializer(self.pretrain_data['user_embed']),
+                trainable=True, name=f'user_embedding_{name_scope}'
             )
             all_weights['item_embedding'] = tf.keras.layers.Embedding(
                 n_items, self.emb_dim, embeddings_initializer=tf.constant_initializer(self.pretrain_data['item_embed']),
@@ -112,21 +112,32 @@ class CrossMiT(tf.keras.Model):
         return all_weights
 
     def call(self, inputs, training=False, node_dropout=0.0, mess_dropout=None):
-        mirnas_s = inputs['mirnas_s']
-        disease = inputs['disease']
+        users_s = inputs['users_s']
+        items_s = inputs['items_s']
         label_s = inputs['label_s']
-        mirnas_t = inputs['mirnas_t']
-        target = inputs['target']
+        users_t = inputs['users_t']
+        items_t = inputs['items_t']
         label_t = inputs['label_t']
 
         if mess_dropout is None:
             mess_dropout = [0.0] * self.n_layers
 
+        # print(f"Calling _create_embed with:")
+        # print(f"  users_s shape: {users_s.shape}, type: {type(users_s)}")
+        # print(f"  items_s shape: {items_s.shape}, type: {type(items_s)}")
+        # print(f"  label_s shape: {label_s.shape}, type: {type(label_s)}")
+        # print(f"  users_t shape: {users_t.shape}, type: {type(users_t)}")
+        # print(f"  items_t shape: {items_t.shape}, type: {type(items_t)}")
+        # print(f"  label_t shape: {label_t.shape}, type: {type(label_t)}")
+        # print(f"  node_dropout: {node_dropout}, type: {type(node_dropout)}")
+        # print(f"  mess_dropout: {mess_dropout}, type: {type(mess_dropout)}")
+        # print(f"  training: {training}, type: {type(training)}")dd
+
         # Get initial embeddings directly from Embedding layers
-        u_g_embeddings_s = self.weights_source['mirna_embedding'](mirnas_s)
-        i_g_embeddings_s = self.weights_source['item_embedding'](disease)
-        u_g_embeddings_t = self.weights_target['mirna_embedding'](mirnas_t)
-        i_g_embeddings_t = self.weights_target['item_embedding'](target)
+        u_g_embeddings_s = self.weights_source['user_embedding'](users_s)
+        i_g_embeddings_s = self.weights_source['item_embedding'](items_s)
+        u_g_embeddings_t = self.weights_target['user_embedding'](users_t)
+        i_g_embeddings_t = self.weights_target['item_embedding'](items_t)
 
         # Apply graph convolution if needed (simplified for now, can reintroduce _create_embed later)
         if self.n_layers > 0:
@@ -134,10 +145,10 @@ class CrossMiT(tf.keras.Model):
                 self.weights_source, self.weights_target, self.norm_adj_s, self.norm_adj_t, 
                 node_dropout, mess_dropout, training
             )
-            u_g_embeddings_s = tf.gather(ua_embeddings_s, mirnas_s)
-            i_g_embeddings_s = tf.gather(ia_embeddings_s, disease)
-            u_g_embeddings_t = tf.gather(ua_embeddings_t, mirnas_t)
-            i_g_embeddings_t = tf.gather(ia_embeddings_t, target)
+            u_g_embeddings_s = tf.gather(ua_embeddings_s, users_s)
+            i_g_embeddings_s = tf.gather(ia_embeddings_s, items_s)
+            u_g_embeddings_t = tf.gather(ua_embeddings_t, users_t)
+            i_g_embeddings_t = tf.gather(ia_embeddings_t, items_t)
 
         scores_s = self.get_scores(u_g_embeddings_s, i_g_embeddings_s)
         scores_t = self.get_scores(u_g_embeddings_t, i_g_embeddings_t)
@@ -146,27 +157,27 @@ class CrossMiT(tf.keras.Model):
 
     def _split_A_hat(self, X, n_items):
         A_fold_hat = []
-        fold_len = (self.n_mirnas + n_items) // self.n_fold
+        fold_len = (self.n_users + n_items) // self.n_fold
         for i_fold in range(self.n_fold):
             start = i_fold * fold_len
-            end = self.n_mirnas + n_items if i_fold == self.n_fold - 1 else (i_fold + 1) * fold_len
+            end = self.n_users + n_items if i_fold == self.n_fold - 1 else (i_fold + 1) * fold_len
             A_fold_hat.append(self._convert_sp_mat_to_sp_tensor(X[start:end]))
         return A_fold_hat
 
     def _split_A_hat_node_dropout(self, X, n_items, keep_prob):
         A_fold_hat = []
-        fold_len = (self.n_mirnas + n_items) // self.n_fold
+        fold_len = (self.n_users + n_items) // self.n_fold
         for i_fold in range(self.n_fold):
             start = i_fold * fold_len
-            end = self.n_mirnas + n_items if i_fold == self.n_fold - 1 else (i_fold + 1) * fold_len
+            end = self.n_users + n_items if i_fold == self.n_fold - 1 else (i_fold + 1) * fold_len
             temp = self._convert_sp_mat_to_sp_tensor(X[start:end])
             n_nonzero_temp = X[start:end].count_nonzero()
             A_fold_hat.append(self._dropout_sparse(temp, float(keep_prob), n_nonzero_temp))
         return A_fold_hat
 
     def s_t_la2add_layer(self, input_s, input_t, lambda_s, lambda_t, domain_laplace):
-        u_g_embeddings_s, i_g_embeddings_s = tf.split(input_s, [self.n_mirnas, self.n_disease], 0)
-        u_g_embeddings_t, i_g_embeddings_t = tf.split(input_t, [self.n_mirnas, self.n_target], 0)
+        u_g_embeddings_s, i_g_embeddings_s = tf.split(input_s, [self.n_users, self.n_items_s], 0)
+        u_g_embeddings_t, i_g_embeddings_t = tf.split(input_t, [self.n_users, self.n_items_t], 0)
         laplace_s = tf.constant(self.domain_laplace[:, 0], name='laplace_s')
         laplace_t = tf.constant(self.domain_laplace[:, 1], name='laplace_t')
         u_g_embeddings_s_lap = tf.transpose(tf.add(laplace_s * tf.transpose(u_g_embeddings_s), laplace_t * tf.transpose(u_g_embeddings_t)))
@@ -194,17 +205,19 @@ class CrossMiT(tf.keras.Model):
         keep_prob = 1.0 - float(node_dropout) if self.node_dropout_flag and training else 1.0
 
         if self.node_dropout_flag and training:
-            A_fold_hat_s = self._split_A_hat_node_dropout(norm_adj_s, self.n_disease, keep_prob)
-            A_fold_hat_t = self._split_A_hat_node_dropout(norm_adj_t, self.n_target, keep_prob)
+            A_fold_hat_s = self._split_A_hat_node_dropout(norm_adj_s, self.n_items_s, keep_prob)
+            A_fold_hat_t = self._split_A_hat_node_dropout(norm_adj_t, self.n_items_t, keep_prob)
         else:
-            A_fold_hat_s = self._split_A_hat(norm_adj_s, self.n_disease)
-            A_fold_hat_t = self._split_A_hat(norm_adj_t, self.n_target)
+            A_fold_hat_s = self._split_A_hat(norm_adj_s, self.n_items_s)
+            A_fold_hat_t = self._split_A_hat(norm_adj_t, self.n_items_t)
+
         # Use full index tensors for graph convolution
-        all_mirnas = tf.range(self.n_mirnas, dtype=tf.int32)
-        all_disease = tf.range(self.n_disease, dtype=tf.int32)
-        all_target = tf.range(self.n_target, dtype=tf.int32)
-        ego_embeddings_s = tf.concat([weights_s['mirna_embedding'](all_mirnas), weights_s['item_embedding'](all_disease)], axis=0)
-        ego_embeddings_t = tf.concat([weights_t['mirna_embedding'](all_mirnas), weights_t['item_embedding'](all_target)], axis=0)
+        all_users = tf.range(self.n_users, dtype=tf.int32)
+        all_items_s = tf.range(self.n_items_s, dtype=tf.int32)
+        all_items_t = tf.range(self.n_items_t, dtype=tf.int32)
+
+        ego_embeddings_s = tf.concat([weights_s['user_embedding'](all_users), weights_s['item_embedding'](all_items_s)], axis=0)
+        ego_embeddings_t = tf.concat([weights_t['user_embedding'](all_users), weights_t['item_embedding'](all_items_t)], axis=0)
 
         if self.connect_way == 'concat':
             all_embeddings_s = [ego_embeddings_s]
@@ -240,15 +253,15 @@ class CrossMiT(tf.keras.Model):
             all_embeddings_s = all_embeddings_s / (self.n_layers + 1)
             all_embeddings_t = all_embeddings_t / (self.n_layers + 1)
 
-        u_g_embeddings_s, i_g_embeddings_s = tf.split(all_embeddings_s, [self.n_mirnas, self.n_disease], 0)
-        u_g_embeddings_t, i_g_embeddings_t = tf.split(all_embeddings_t, [self.n_mirnas, self.n_target], 0)
+        u_g_embeddings_s, i_g_embeddings_s = tf.split(all_embeddings_s, [self.n_users, self.n_items_s], 0)
+        u_g_embeddings_t, i_g_embeddings_t = tf.split(all_embeddings_t, [self.n_users, self.n_items_t], 0)
         return u_g_embeddings_s, i_g_embeddings_s, u_g_embeddings_t, i_g_embeddings_t
 
-    def get_scores(self, mirnas, pos_items):
-        return tf.reduce_sum(tf.multiply(mirnas, pos_items), axis=1)
+    def get_scores(self, users, pos_items):
+        return tf.reduce_sum(tf.multiply(users, pos_items), axis=1)
 
-    def create_cross_loss(self, mirnas, pos_items, label, scores):
-        regularizer = tf.nn.l2_loss(mirnas) + tf.nn.l2_loss(pos_items)
+    def create_cross_loss(self, users, pos_items, label, scores):
+        regularizer = tf.nn.l2_loss(users) + tf.nn.l2_loss(pos_items)
         regularizer = regularizer / self.batch_size
         # Chuyển label sang float32 để khớp với logits
         label = tf.cast(label, tf.float32)
