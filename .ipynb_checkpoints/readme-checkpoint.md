@@ -1,1 +1,0 @@
-  mirtmc_final_weights.pt: https://drive.google.com/file/d/1ovKlgJ_g2gD50DCaOxn3vdPmNrTpAsR-/view?usp=sharing
