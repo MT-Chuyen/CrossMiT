@@ -9,7 +9,6 @@ from tqdm import tqdm
 from time import time
 import wandb
 import scipy.sparse as sp
-
 global epoch, losses, loss_source, loss_target, args, save_log_file, t0
 
 def load_pretrained_data():

@@ -7,6 +7,7 @@ def dict_add(data_dic,keys,values):
         data_dic[keys].append(values)
     else:
         data_dic[keys] = [values]
+        
 def list_str(list):
     return [str(i) for i in list ]
 

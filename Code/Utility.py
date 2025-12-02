@@ -9,7 +9,6 @@ import re
 import tensorflow as tf
 import random as rd
 import scipy.sparse as sp
-
 def test(model, data_generator, test_user_list, data_type, batch_size, Ks, layer_size):
     Ks_list = eval(Ks)
 
