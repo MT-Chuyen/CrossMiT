@@ -1,5 +1,5 @@
 from Utility import *
-from CrossMiT import CrossMiT
+from Model import CrossMiT
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 import tensorflow as tf
