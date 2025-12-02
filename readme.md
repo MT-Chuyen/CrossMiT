@@ -6,18 +6,24 @@ CrossMiT predicts miRNA-Target Interactions by leveraging miRNA-Disease Associat
 
 ## 📂 Repo Structure  
 
-* **`Code/`**: Contains all source code to reproduce all the results
- - Main.py: Main training loop. Load data, initialize CrossMiT model, save checkpoint, handle resume/pretrain.
- - Model.py: Defines the CrossMiT model architecture.
- - Utility.py: Utility functions: Calculating metrics: getHitRatio, getNDCG; Test support: get_test_instance; Directory management: ensureDir; Early stopping: early_stopping; Log printing: pprint
-Flow: Main.py runs training → uses Model.py to build the model → uses Utility.py to calculate metrics and manage files.
+* **`Code/`**: Contains all source code to reproduce the results  
+  - **Main.py**: Main training loop — loads data, initializes CrossMiT model, saves checkpoints, handles resume/pretrain.  
+  - **Model.py**: Defines the CrossMiT model architecture.  
+  - **Utility.py**: Utility functions:  
+    - Calculating metrics: `getHitRatio`, `getNDCG`  
+    - Test support: `get_test_instance`  
+    - Directory management: `ensureDir`  
+    - Early stopping: `early_stopping`  
+    - Log printing: `pprint`  
+  - **Flow**: Main.py → Model.py → Utility.py  
 
-* **`Data/`**: Contains the data used and the data processing files.
- * split_data.py: Split train/test data (split_data, split_loo for leave-one-out).
+* **`Data/`**: Contains raw data and processing scripts  
+  - **split_data.py**: Handles train/test split (`split_data`, `split_loo` for leave-one-out).  
+  - **CSV files**: miRNA–disease and miRNA–gene rating data.  
+  - **miRNA-disease_miRNA-target/** and **miRNA-target_miRNA-disease/**:  
+    - Adjacency matrices (.npz)  
+    - Processed data used by the model  
 
- - CSV files: Rating data (miRNA-disease, miRNA-gene).
-
- - miRNA-disease_miRNA-target/, miRNA-target_miRNA-disease/ directories: Contains adjacency matrix (.npz) and processed data for the model.
 Flow: Main.py runs training → uses Model.py to build the model → uses Utility.py to calculate metrics and manage files.
 
  
