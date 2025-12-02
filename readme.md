@@ -1,19 +1,20 @@
-# MHDR: Improving Drug Repositioning Through Multi-Source Disease Similarity Networks
+# CrossMiT: Cross-Domain Transfer Framework for
+Enhanced miRNA–Target Interaction Prediction via
+Joint Learning
 
 **Tóm tắt:** Chúng tôi cải thiện quy trình tái định vị thuốc (computational drug repositioning) bằng cách tích hợp nhiều mạng lưới tương đồng bệnh (disease similarity networks) thành các mạng $\textbf{multiplex}$ và $\textbf{multiplex-heterogeneous}$.
 
 ---
 
-## 📂 Repo Structure (Cấu trúc Repository)
+## 📂 Repo Structure  
 
 * **`Data/`**: Chứa tất cả dữ liệu được sử dụng trong nghiên cứu.
 * **`Code/`**: Chứa tất cả mã nguồn ($\textbf{source code}$) để tái tạo lại các kết quả của nghiên cứu.
-* **`Results/`**: Nơi lưu trữ các kết quả mô phỏng ($\textbf{simulation results}$).
-* **`Evidence/`**: Nơi lưu trữ các bằng chứng ($\textbf{collected evidence}$) đã thu thập được.
+ 
 
 ---
 
-## 🚀 How to Run (Cách chạy)
+## 🚀 How to Run  
 
 ### 1. Cài đặt các gói R cần thiết
 
