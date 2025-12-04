@@ -45,7 +45,7 @@ The execution process consists of 2 main steps:
 
 ### Step 1: Prepare Data
 
-Run the `Prepare_data.py` script to process the raw data and create the 5-Fold structure.
+Run the `Prepare_data.py` script to process the raw data.
 
 ```bash
 cd Code
