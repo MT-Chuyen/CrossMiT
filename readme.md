@@ -31,6 +31,37 @@ Flow: Main.py runs training → uses Model.py to build the model → uses Utilit
 
 ## 🚀 How to Run  
 
-command line: python Main.py
+The execution process consists of 2 main steps:
+
+### Step 1: Prepare Data
+
+Run the `Prepare_data.py` script to process the raw data and create the 5-Fold structure.
+
+```bash
+cd Code
+python Prepare_data.py
+```
+
+After this script finishes, the `Data/Data-kFold/` directory will be created, containing the pre-split data for all 5 folds.
+
+### Step 2: Train and Evaluate (5-Fold Cross-Validation)
+
+Run the `Run_all.py` script to automatically perform the training and evaluation process across all 5 folds. This script will call `Main.py` for each fold and summarize the results.
+
+```bash
+# Still inside the Code directory
+python Run_all.py
+```
+
+The final aggregated results will be saved in `Data/results_summary.txt`.
+
+### (Optional) Run Manually on a Single Fold
+
+If you only want to run on a specific fold (e.g., Fold 1), you can run `Main.py` directly and specify the desired fold.
+
+```bash
+cd Code
+python Main.py --fold 1 --gpu_id 0
+```
  
  
