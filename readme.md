@@ -11,7 +11,7 @@ The project is organized into two main directories: `Data` for data storage and 
 CrossMiT/
 ├── Code/
 │   ├── Prepare_data.py     # STEP 1: Preprocess and split data into K-Folds.
-│   ├── Run_all.py          # STEP 2: Automatically run 5-Fold CV and summarize results.
+│   ├── Run_all.py          # STEP 2: Automatically run k-Fold LOOCV and summarize results.
 │   ├── Main.py             # Main script to train and evaluate on a single Fold.
 │   ├── Model.py            # Defines the CrossMiT model architecture.
 │   ├── Utility.py          # Contains the Data class, test function, and other helpers.
