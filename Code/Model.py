@@ -3,13 +3,12 @@ import numpy as np
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 
-from utility.utility import *
+from Utility import *
 
 class CrossMiT(tf.keras.Model):
     def __init__(self, data_config, args, pretrain_data):
         super(CrossMiT, self).__init__()
-
-        # Argument settings
+ 
         self.adj_type = args.adj_type
         self.alg_type = args.alg_type
         self.initial_type = args.initial_type
@@ -54,7 +53,7 @@ class CrossMiT(tf.keras.Model):
         self.weight_source, self.weight_target = eval(args.weight_loss)[:]
         self.node_dropout_flag = args.node_dropout_flag
 
-        # Initialize weights
+ 
         self.weights_source = self._init_weights('source', self.n_items_s, None)
         self.weights_target = self._init_weights('target', self.n_items_t, None)
 
@@ -122,24 +121,12 @@ class CrossMiT(tf.keras.Model):
         if mess_dropout is None:
             mess_dropout = [0.0] * self.n_layers
 
-        # print(f"Calling _create_embed with:")
-        # print(f"  users_s shape: {users_s.shape}, type: {type(users_s)}")
-        # print(f"  items_s shape: {items_s.shape}, type: {type(items_s)}")
-        # print(f"  label_s shape: {label_s.shape}, type: {type(label_s)}")
-        # print(f"  users_t shape: {users_t.shape}, type: {type(users_t)}")
-        # print(f"  items_t shape: {items_t.shape}, type: {type(items_t)}")
-        # print(f"  label_t shape: {label_t.shape}, type: {type(label_t)}")
-        # print(f"  node_dropout: {node_dropout}, type: {type(node_dropout)}")
-        # print(f"  mess_dropout: {mess_dropout}, type: {type(mess_dropout)}")
-        # print(f"  training: {training}, type: {type(training)}")dd
-
-        # Get initial embeddings directly from Embedding layers
+ 
         u_g_embeddings_s = self.weights_source['user_embedding'](users_s)
         i_g_embeddings_s = self.weights_source['item_embedding'](items_s)
         u_g_embeddings_t = self.weights_target['user_embedding'](users_t)
         i_g_embeddings_t = self.weights_target['item_embedding'](items_t)
-
-        # Apply graph convolution if needed (simplified for now, can reintroduce _create_embed later)
+ 
         if self.n_layers > 0:
             ua_embeddings_s, ia_embeddings_s, ua_embeddings_t, ia_embeddings_t = self._create_embed(
                 self.weights_source, self.weights_target, self.norm_adj_s, self.norm_adj_t, 
@@ -210,8 +197,7 @@ class CrossMiT(tf.keras.Model):
         else:
             A_fold_hat_s = self._split_A_hat(norm_adj_s, self.n_items_s)
             A_fold_hat_t = self._split_A_hat(norm_adj_t, self.n_items_t)
-
-        # Use full index tensors for graph convolution
+ 
         all_users = tf.range(self.n_users, dtype=tf.int32)
         all_items_s = tf.range(self.n_items_s, dtype=tf.int32)
         all_items_t = tf.range(self.n_items_t, dtype=tf.int32)
@@ -262,8 +248,7 @@ class CrossMiT(tf.keras.Model):
 
     def create_cross_loss(self, users, pos_items, label, scores):
         regularizer = tf.nn.l2_loss(users) + tf.nn.l2_loss(pos_items)
-        regularizer = regularizer / self.batch_size
-        # Chuyển label sang float32 để khớp với logits
+        regularizer = regularizer / self.batch_size 
         label = tf.cast(label, tf.float32)
         mf_loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(labels=label, logits=scores))
         emb_loss = self.decay * regularizer

@@ -1,0 +1,44 @@
+************source data info************
+n_users=1268, n_items=2274
+n_interactions=29026
+n_train=27758, n_test=1268, sparsity=0.01007
+************target data info************
+n_users=1268, n_items=16922
+n_interactions=1321358
+n_train=1321106, n_test=252, sparsity=0.06158
+Training without pretraining.
+
+*********source initial result**********
+--- SOURCE INITIAL RESULTS (full rating, #user=1268) ---
+K=10: HR=0.2413, NDCG=0.1008, Prec=0.0241, Rec=0.2413, F1=0.0439
+AUC: 0.7077, MAP: 0.0912
+
+*********target initial result**********
+--- TARGET INITIAL RESULTS (full rating, #user=1268) ---
+K=10: HR=0.1825, NDCG=0.0778, Prec=0.0183, Rec=0.1825, F1=0.0332
+AUC: 0.6437, MAP: 0.0753
+Saved weights to: ../Data/weights/miRNA-disease_miRNA-target_1.0/gcf/N_layer=64-64-64/l0.002_b32768_layer64-64-64_adjnorm_connectconcat_drop[0.1,0.1,0.1]
+target domain single train
+
+*************source result**************
+Epoch 0 [212.7s + 32.2s]: train==[1.1125=0.6334 + 0.5009] (full rating, #user=1268)
+--- SOURCE GLOBAL METRICS ---
+AUC: 0.2871, MAP (AUPR proxy): 0.0225
+
+--- SOURCE RANKING METRICS @K (K=10 to 10) ---
+K=10: HR=0.0197, NDCG=0.0116, Prec=0.0020, Rec=0.0197, F1=0.0036
+
+
+*************target result**************
+Epoch 0 [212.7s + 6.8s]: train==[1.1125=0.6334 + 0.5009] (full rating, #user=1268)
+--- TARGET GLOBAL METRICS ---
+AUC: 0.6333, MAP (AUPR proxy): 0.0484
+
+--- TARGET RANKING METRICS @K (K=10 to 10) ---
+K=10: HR=0.0952, NDCG=0.0364, Prec=0.0095, Rec=0.0952, F1=0.0173
+
+Saved weights for epoch 0 to: ../Data/weights/miRNA-disease_miRNA-target_1.0/gcf/N_layer=64-64-64/l0.002_b32768_layer64-64-64_adjnorm_connectconcat_drop[0.1,0.1,0.1]
+**************source part***************
+Best Iter=[0]@[296.9]	 hit=['0.2413'], ndcg=['0.1008']
+**************target part***************
+Best Iter=[0]@[296.9]	 hit=['0.1825'], ndcg=['0.0778']

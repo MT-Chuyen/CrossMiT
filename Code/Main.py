@@ -1,4 +1,5 @@
 from Utility import *
+from Config import parse_args
 from Model import CrossMiT
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
@@ -82,6 +83,11 @@ def find_best_epoch(ndcg_loger, hit_loger, domain_type):
 if __name__ == '__main__':
     args = parse_args()
 
+    if args.data_path is None:
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        repo_root = os.path.dirname(script_dir)
+        args.data_path = os.path.join(repo_root, 'Data', 'Data-kFold', f'Fold_{args.fold}') + os.sep
+
     gpus = tf.config.list_physical_devices('GPU')
     if gpus:
         print(f"Available GPUs: {[gpu.name for gpu in gpus]}")
@@ -98,6 +104,7 @@ if __name__ == '__main__':
     else:
         print("No GPU found. Using CPU.")
 
+    os.environ['WANDB_DIR'] = os.path.join(args.proj_path, 'wandb')
     wandb.init(
         project="CrossMiT-miRNA",
         name=f"run_lr_{args.lr}_b_{args.batch_size}_layers_{args.layer_size}",
@@ -116,7 +123,7 @@ if __name__ == '__main__':
     )
 
     weight_id = random()
-    save_log_dir = './logs/%s/%s/' % (args.dataset, str(args.layer_size))
+    save_log_dir = os.path.join(args.proj_path, 'logs/%s/%s/' % (args.dataset, str(args.layer_size)))
     ensureDir(save_log_dir)
     save_log_file = open(save_log_dir + 'lr_%s_b%s_id_%.4f.txt' % (str(args.lr), args.batch_size, weight_id), 'w+')
 
@@ -169,9 +176,12 @@ if __name__ == '__main__':
         split_ids_t, split_status_t = data_generator_t.get_sparsity_split()
     else:
         split_ids_s, split_ids_t, split_status_s, split_status_t = [], [], [], []
-        split_ids_s.append(range(data_generator_s.n_users))
-        split_ids_t.append(range(data_generator_t.n_users))
+
+        split_ids_s.append(list(range(data_generator_s.n_test))) 
         split_status_s.append('full rating, #user=%d' % data_generator_s.n_users)
+        
+
+        split_ids_t.append(list(range(data_generator_t.n_test))) 
         split_status_t.append('full rating, #user=%d' % data_generator_t.n_users)
 
     model = CrossMiT(data_config=config, args=args, pretrain_data=pretrain_data)

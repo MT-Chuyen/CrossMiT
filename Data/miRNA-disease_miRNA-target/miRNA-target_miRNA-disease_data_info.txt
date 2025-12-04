@@ -1,8 +1,0 @@
-raw_data1 info : 1866 16979 1730809
-raw_data2 info : 1911 2360 31461
-common user num 1268
-after common_data-miRNA_target info : 1268 16922 1321358 0.061581
-after common_data2 info : 1268 2275 29026 0.010062
-min user group size is 4 1
-filter way: user>1,item>40
-write data finished!

@@ -1,0 +1,31 @@
+
+ lr=0.0020, layer_fun=gcf, fuse_type_in=la2add, neg_num=4, n_interaction=3, connect_type=concat
+	source result
+Best Iter=[0]@[296.3]	 hit=['0.2603'], ndcg=['0.1128']
+target result
+Best Iter=[0]@[296.3]	 hit=['0.1732'], ndcg=['0.0717']
+ lr=0.0020, layer_fun=gcf, fuse_type_in=la2add, neg_num=4, n_interaction=3, connect_type=concat
+	source result
+Best Iter=[0]@[293.3]	 hit=['0.2950'], ndcg=['0.1299']
+target result
+Best Iter=[0]@[293.3]	 hit=['0.1969'], ndcg=['0.0908']
+ lr=0.0020, layer_fun=gcf, fuse_type_in=la2add, neg_num=4, n_interaction=3, connect_type=concat
+	source result
+Best Iter=[0]@[295.3]	 hit=['0.2626'], ndcg=['0.1141']
+target result
+Best Iter=[0]@[295.3]	 hit=['0.1654'], ndcg=['0.0744']
+ lr=0.0020, layer_fun=gcf, fuse_type_in=la2add, neg_num=4, n_interaction=3, connect_type=concat
+	source result
+Best Iter=[0]@[296.9]	 hit=['0.2579'], ndcg=['0.1079']
+target result
+Best Iter=[0]@[296.9]	 hit=['0.1811'], ndcg=['0.0947']
+ lr=0.0020, layer_fun=gcf, fuse_type_in=la2add, neg_num=4, n_interaction=3, connect_type=concat
+	source result
+Best Iter=[0]@[291.9]	 hit=['0.3170'], ndcg=['0.1421']
+target result
+Best Iter=[0]@[291.9]	 hit=['0.2126'], ndcg=['0.0968']
+ lr=0.0020, layer_fun=gcf, fuse_type_in=la2add, neg_num=4, n_interaction=3, connect_type=concat
+	source result
+Best Iter=[0]@[296.9]	 hit=['0.2413'], ndcg=['0.1008']
+target result
+Best Iter=[0]@[296.9]	 hit=['0.1825'], ndcg=['0.0778']
