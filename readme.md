@@ -36,9 +36,7 @@ CrossMiT/
     ├── weights/            # (Will be created) Stores trained model weights.
     └── output/             # (Will be created) Stores evaluation results (metrics).
         ├── folds/
-        
- 
- 
+```
 ---
 
 ## 🚀 How to Run  
