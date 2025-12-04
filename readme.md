@@ -37,17 +37,7 @@ CrossMiT/
     └── output/             # (Will be created) Stores evaluation results (metrics).
         ├── folds/
         
-```
-### Key File Descriptions
-*   **`Code/Prepare_data.py`**: The initial script. It reads data from `miRNA-target.csv` and `miRNA-disease.csv`, finds common miRNAs, re-indexes them, and creates a 5-fold cross-validation data structure in `Data/Data-kFold/`.
-*   **`Code/Run_all.py`**: A script to automate the entire experiment. It sequentially calls `Main.py` to train and evaluate on each fold, then aggregates the final results.
-*   **`Code/Main.py`**: The "heart" of the project, responsible for training and evaluating the model on a specific data fold. It initializes the model, manages the training loop, calls the `test` function, and saves checkpoints and logs.
-*   **`Code/Model.py`**: Defines the neural network architecture of CrossMiT, including Graph Convolutional Layers and the knowledge transfer mechanism between the two domains.
-*   **`Code/Utility.py`**: Contains crucial support components:
-    *   `Data` class: Loads and manages training/testing data for each fold.
-    *   `test` function: Performs the evaluation process and calculates metrics (HR, NDCG, AUC, MAP, etc.).
-    *   Other utility functions like `early_stopping` and `pprint`.
-
+ 
  
 ---
 
