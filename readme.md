@@ -6,6 +6,38 @@ CrossMiT predicts miRNA-Target Interactions by leveraging miRNA-Disease Associat
 
 ## 📂 Repo Structure  
 
+```
+PUSH-GIT/
+├── Code/
+│   ├── Prepare_data.py     # STEP 1: Preprocess and split data into K-Folds.
+│   ├── Run_all.py          # STEP 2: Automatically run 5-Fold CV and summarize results.
+│   ├── Main.py             # Main script to train and evaluate on a single Fold.
+│   ├── Model.py            # Defines the CrossMiT model architecture.
+│   ├── Utility.py          # Contains the Data class, test function, and other helpers.
+│   ├── Config.py           # Manages command-line arguments.
+│   └── split_data.py       # (Old script) An alternative way to split data.
+│
+└── Data/
+    ├── miRNA-target.csv    # Raw data: miRNA–Target interactions.
+    ├── miRNA-disease.csv   # Raw data: miRNA–Disease associations.
+    │
+    ├── Data-kFold/         # (Will be created) Directory for processed K-Fold data.
+    │   └── Fold_1/
+    │       ├── miRNA-disease_miRNA-target/ # Source domain data (disease).
+    │       │   ├── train.txt
+    │       │   ├── test.txt
+    │       │   └── test_neg.txt
+    │       └── miRNA-target_miRNA-disease/ # Target domain data (target).
+    │           └── ...
+    │   └── Fold_2/, Fold_3/, ...
+    │
+    ├── logs/               # (Will be created) Stores detailed logs for each run.
+    ├── weights/            # (Will be created) Stores trained model weights.
+    └── output/             # (Will be created) Stores evaluation results (metrics).
+        ├── folds/
+        └── miRNA-disease_miRNA-target.result
+```
+
 *   **`Code/Prepare_data.py`**: The initial script. It reads data from `miRNA-target.csv` and `miRNA-disease.csv`, finds common miRNAs, re-indexes them, and creates a 5-fold cross-validation data structure in `Data/Data-kFold/`.
 *   **`Code/Run_all.py`**: A script to automate the entire experiment. It sequentially calls `Main.py` to train and evaluate on each fold, then aggregates the final results.
 *   **`Code/Main.py`**: The "heart" of the project, responsible for training and evaluating the model on a specific data fold. It initializes the model, manages the training loop, calls the `test` function, and saves checkpoints and logs.
