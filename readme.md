@@ -2,10 +2,11 @@
 
 CrossMiT predicts miRNA-Target Interactions by leveraging miRNA-Disease Associations to overcome data sparsity. It employs a bi-directional graph transfer network to align genotypic and phenotypic features through shared miRNA anchors.
 
-![](https://github.com/MT-Chuyen/CrossMiT/raw/main/Flow.jpg)
+![CrossMiT Framework](https://github.com/MT-Chuyen/CrossMiT/raw/main/Flow.jpg)
+
 
 ## 📂 Repo Structure  
-
+The project is organized into two main directories: `Data` for data storage and `Code` for the source code.
 ```
 PUSH-GIT/
 ├── Code/
